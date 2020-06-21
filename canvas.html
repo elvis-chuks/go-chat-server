@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="960" height="500"></canvas>
+    <script>
+        var socket = new WebSocket("ws://localhost:8080/ws")
+        console.log("attempting socket connection")
+
+        socket.onopen = () => {
+            console.log("Successfully connected")
+        }
+
+        socket.onmessage = (msg) => {
+            // console.log(msg)
+            var mouse = JSON.parse(msg.data)
+            console.log(mouse)
+            var canvas = document.getElementById('myCanvas');
+            // writeMessage(canvas, "message", {X:mouse.posX,Y:mouse.posY})
+            var context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.lineCap = 'round';
+            context.font = '18pt Calibri';
+            context.fillStyle = 'black';
+            context.fillText(mouse.text, 10, 25);
+
+            context.moveTo(mouse.posX, mouse.posY);
+            context.lineTo(mouse.posX, mouse.posY)
+            context.stroke()
+        }
+
+        socket.onclose = (event) => {
+            console.log("Closing socket",event)
+        }
+        socket.onerror = (error) => {
+            console.log("Socket error", error)
+        }
+      function writeMessage(canvas, message, mousePos) {
+        var context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.lineCap = 'round';
+        context.font = '18pt Calibri';
+        context.fillStyle = 'black';
+        context.fillText(message, 10, 25);
+
+        context.moveTo(mousePos.x, mousePos.y);
+        context.lineTo(mousePos.x, mousePos.y)
+        context.stroke()
+
+        socket.send(JSON.stringify({posX:mousePos.x,posY:mousePos.y,text:"hi"}))
+        console.log(JSON.stringify({
+            posX:mousePos.x.toString(),
+            posY:mousePos.y,text:"hi"
+            }
+        )
+        )
+        
+      }
+      function getMousePos(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+          x: evt.clientX - rect.left,
+          y: evt.clientY - rect.top
+        };
+      }
+      var canvas = document.getElementById('myCanvas');
+      var context = canvas.getContext('2d');
+      context.beginPath(); 
+    
+      context.lineWidth = 5;
+      context.strokeStyle = 'blue'; 
+
+      canvas.addEventListener('mousemove', function(evt) {
+        var mousePos = getMousePos(canvas, evt);
+        var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
+        writeMessage(canvas, message,mousePos);
+        
+      }, false);
+    </script>
+  </body>
+</html>
+      
